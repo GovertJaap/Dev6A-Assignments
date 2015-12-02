@@ -39,7 +39,56 @@ namespace EntryPoint
 
     private static IEnumerable<Vector2> SortSpecialBuildingsByDistance(Vector2 house, IEnumerable<Vector2> specialBuildings)
     {
-      return specialBuildings.OrderBy(v => Vector2.Distance(v, house));
+            
+           specialBuildings.OrderBy(v => Vector2.Distance(v, house));
+           return MergeSortByDistance.SortMerge(specialBuildings, 0, specialBuildings.Count );
+    }
+
+    class MergeSortByDistance
+    {
+        static public void MainMerge(int[] intArray, int left, int mid, int right)
+        {
+            int[] temp = new int[50];
+            int i, left_end, intArray_elements, tmp_pos;
+
+            left_end = (mid - 1);
+            tmp_pos = left;
+            intArray_elements = (right - left + 1);
+
+            while ((left <= left_end) && (mid <= right))
+            {
+                if (intArray[left] <= intArray[mid])
+                    temp[tmp_pos++] = intArray[left++];
+                else
+                    temp[tmp_pos++] = intArray[mid++];
+            }
+
+            while (left <= left_end)
+                temp[tmp_pos++] = intArray[left++];
+
+            while (mid <= right)
+                temp[tmp_pos++] = intArray[mid++];
+
+            for (i = 0; i < intArray_elements; i++)
+            {
+                intArray[right] = temp[right];
+                right--;
+            }
+        }
+
+        static public void SortMerge(int[] intArray, int leftBoundArray, int rightBoundArray)
+        {
+            int middle;
+
+            if (rightBoundArray > leftBoundArray)
+            {
+                middle = (rightBoundArray + leftBoundArray) / 2;
+                SortMerge(intArray, leftBoundArray, middle);
+                SortMerge(intArray, (middle + 1), rightBoundArray);
+
+                MainMerge(intArray, leftBoundArray, (middle + 1), rightBoundArray);
+            }
+        }    
     }
 
     private static IEnumerable<IEnumerable<Vector2>> FindSpecialBuildingsWithinDistanceFromHouse(
