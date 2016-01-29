@@ -137,18 +137,225 @@ namespace EntryPoint
             return array;
         }
 
+        interface Tree<T>
+        {
+            Boolean isEmpty();
+
+            Tree<T> getLeftTree();
+
+            Tree<T> getRightTree();
+
+            Boolean sortedOnX();
+
+            T getVector();
+        }
+
+        //since node and emptynode both inherit from the abstract interface Tree, they can both be used
+        class Node<T> : Tree<T>
+        {
+            T Vector;
+            Tree<T> left;
+            Tree<T> right;
+            Boolean sortage;
+
+            public Boolean sortedOnX()
+            {
+                return sortage;
+            }
+
+            public Boolean isEmpty()
+            {
+                return false;
+            }
+
+            //getters
+            public T getVector()
+            {
+                return Vector;
+            }
+
+            public Tree<T> getLeftTree()
+            {
+                return left;
+            }
+
+            public Tree<T> getRightTree()
+            {
+                return right;
+            }
+
+
+            //constructor
+            public Node(T V, Tree<T> l, Tree<T> r, Boolean s)
+            {
+                Vector = V;
+                left = l;
+                right = r;
+                sortage = s;
+            }
+
+        }
+
+        //since node and emptynode both inherit from the abstract interface Tree, they can both be used
+        class EmptyNode<T> : Tree<T>
+        {
+            public Boolean sortedOnX()
+            {
+                return false;
+            }
+
+            public Boolean isEmpty()
+            {
+                return true;
+            }
+
+            //getters
+            public T getVector()
+            {
+                throw new NotImplementedException();
+            }
+
+
+            public Tree<T> getLeftTree()
+            {
+                throw new NotImplementedException();
+            }
+
+            public Tree<T> getRightTree()
+            {
+                throw new NotImplementedException();
+            }
+            //(explicit) constructor for an emptynode is not specified in the interface contract and thusly not necessary
+            //same goes for setters
+        }
+
+
+        //Call this with nextLevelSortedOnX =true!
+        static Tree<Vector2> insertIntoKD(Vector2 Vector, Tree<Vector2> root, bool isParentX)
+        {
+            if (root.isEmpty())
+            {
+                if (isParentX)
+                    return new Node<Vector2>(Vector, new EmptyNode<Vector2>(), new EmptyNode<Vector2>(), false);
+                else
+                    return new Node<Vector2>(Vector, new EmptyNode<Vector2>(), new EmptyNode<Vector2>(), true);
+            }
+            if (root.sortedOnX())
+            {
+                if (root.getVector() == Vector)
+                    return root;
+
+                if (Vector.X < root.getVector().X)
+                    return new Node<Vector2>(root.getVector(), insertIntoKD(Vector, root.getLeftTree(), root.sortedOnX()), root.getRightTree(), true);
+                else
+                    return new Node<Vector2>(root.getVector(), root.getLeftTree(), insertIntoKD(Vector, root.getRightTree(), root.sortedOnX()), true);
+            }
+            else
+            {
+                if (root.getVector() == Vector)
+                    return root;
+
+                if (Vector.Y < root.getVector().Y)
+                    return new Node<Vector2>(root.getVector(), insertIntoKD(Vector, root.getLeftTree(), root.sortedOnX()), root.getRightTree(), false);
+                else
+                    return new Node<Vector2>(root.getVector(), root.getLeftTree(), insertIntoKD(Vector, root.getRightTree(), root.sortedOnX()), false);
+            }
+        }
+        
+        //Rangesearch
+        static void rangeSearch(Tree<Vector2> root, Vector2 houseVector, float radius, List<Vector2> returnList)
+        {
+            if (root.isEmpty() == false)
+            {
+                if (root.sortedOnX() == true)
+                {
+                    //If we are WITHIN radius
+                    if ((houseVector.X - root.getVector().X) < radius)
+                    {
+                        //Euclidean check for good measure (haha)
+                        if (Vector2.Distance(root.getVector(), houseVector) <= radius)
+                            returnList.Add(root.getVector());
+
+                        //Be thorough and searche the rest too
+                        rangeSearch(root.getLeftTree(), houseVector, radius, returnList);
+                        rangeSearch(root.getRightTree(), houseVector, radius, returnList);
+                    }
+                    else if (root.getVector().X >= (houseVector.X + radius))
+                    {
+                        Console.WriteLine(root.getVector().X + " is bigger than " + (houseVector.X + radius) + " so we go left");
+                        rangeSearch(root.getLeftTree(), houseVector, radius, returnList);
+                    }
+                    else if (root.getVector().X <= (houseVector.X - radius))
+                    {
+                        Console.WriteLine(root.getVector().X + " is smaller than " + (houseVector.X + radius) + " so we go right");
+                        rangeSearch(root.getRightTree(), houseVector, radius, returnList);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Not a single matching node found");
+                    }
+                }
+                else
+                {
+                    //Perfect Node within range, we can return the subtree of root
+                    //If we are WITHIN radius
+                    if ((houseVector.Y - root.getVector().Y) <= radius)
+                    {
+                        //Euclidean check for good measure (haha)
+                        if (Vector2.Distance(root.getVector(), houseVector) <= radius)
+                            returnList.Add(root.getVector());
+
+                        //Be thorough and searche the rest too
+                        rangeSearch(root.getLeftTree(), houseVector, radius, returnList);
+                        rangeSearch(root.getRightTree(), houseVector, radius, returnList);
+                    }
+                    else if (root.getVector().Y > (houseVector.Y + radius))
+                    {
+                        Console.WriteLine(root.getVector().Y + " is bigger than " + (houseVector.Y + radius) + " so we go left");
+                        rangeSearch(root.getLeftTree(), houseVector, radius, returnList);
+                    }
+                    else if (root.getVector().Y < (houseVector.Y - radius))
+                    {
+                        Console.WriteLine(root.getVector().Y + " is smaller than " + (houseVector.Y + radius) + " so we go right");
+                        rangeSearch(root.getRightTree(), houseVector, radius, returnList);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Not a single matching node found");
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("Empty tree");
+            }
+        }
 
         private static IEnumerable<IEnumerable<Vector2>> FindSpecialBuildingsWithinDistanceFromHouse(
           IEnumerable<Vector2> specialBuildings,
           IEnumerable<Tuple<Vector2, float>> housesAndDistances)
         {
-            return
-                from h in housesAndDistances
-                select
-                  from s in specialBuildings
-                  where Vector2.Distance(h.Item1, s) <= h.Item2
-                  select s;
+            var Tree = new EmptyNode<Vector2>() as Tree<Vector2>;
+            List<Vector2> listOfBuildings = specialBuildings.ToList();
+
+            foreach (Vector2 v in listOfBuildings)
+            {
+                Tree = insertIntoKD(v, Tree, Tree.sortedOnX());
+            }
+
+            List<Tuple<Vector2, float>> housesAndDistancesList = housesAndDistances.ToList();
+            List<List<Vector2>> returnList = new List<List<Vector2>>();
+
+            foreach (Tuple<Vector2, float> t in housesAndDistancesList)
+            {
+                List<Vector2> listForHouse = new List<Vector2>();
+                rangeSearch(Tree, t.Item1, t.Item2, listForHouse);
+                returnList.Add(listForHouse);
+            }
+
+           return returnList.AsEnumerable();
         }
+
 
         private static IEnumerable<Tuple<Vector2, Vector2>> FindRoute(Vector2 startingBuilding,
           Vector2 destinationBuilding, IEnumerable<Tuple<Vector2, Vector2>> roads)
